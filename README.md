@@ -1,3 +1,5 @@
+URL: `https://warden-frontend-flax.vercel.app`
+
 # Running frontend:
 
 - clone this repository
