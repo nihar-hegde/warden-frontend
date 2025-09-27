@@ -57,7 +57,7 @@ export function WeatherPropertyFilter() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const { properties, loading, error } = useProperties(
+  const { properties, loading, error, total, hasNextPage } = useProperties(
     filters,
     page,
     PAGE_SIZE,
@@ -192,11 +192,11 @@ export function WeatherPropertyFilter() {
                   />
                   <div className="flex justify-between text-xs text-muted-foreground mt-2">
                     <span className="font-medium">
-                      {filters.humidityRange[0]}%
+                      {pendingFilters.humidityRange[0]}%
                     </span>
                     <span className="text-xs">0% to 100%</span>
                     <span className="font-medium">
-                      {filters.humidityRange[1]}%
+                      {pendingFilters.humidityRange[1]}%
                     </span>
                   </div>
                 </div>
@@ -272,6 +272,8 @@ export function WeatherPropertyFilter() {
         error={error}
         page={page}
         pageSize={PAGE_SIZE}
+        total={total}
+        hasNextPage={hasNextPage}
         onPageChange={setPage}
       />
     </div>

@@ -16,5 +16,6 @@ export interface Property {
     temperature: number | null;
     humidity: number | null;
     weathercode: number | null;
+    weatherGroup: string | null;
   };
 }
