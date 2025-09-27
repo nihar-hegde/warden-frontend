@@ -45,13 +45,14 @@ export function WeatherPropertyFilter() {
 
   const PAGE_SIZE = 30;
 
-  // debounce search
+  // debounce searchTerm -> update filters.search after user stops typing
   useEffect(() => {
     const timer = setTimeout(() => {
       if (searchTerm.trim() !== "") {
-        setFilters((prev) => ({ ...prev, search: searchTerm }));
-        setPage(1);
+        // keep filters in sync for the debounced instant-search path
+        setFilters((prev) => ({ ...prev, search: searchTerm.trim() }));
         setHasSearched(true);
+        setPage(1);
       }
     }, 500);
     return () => clearTimeout(timer);
@@ -81,27 +82,48 @@ export function WeatherPropertyFilter() {
   };
 
   const clearFilters = () => {
-    setFilters({
+    const cleared = {
       search: "",
-      tempRange: [-20, 50],
-      humidityRange: [0, 100],
+      tempRange: [-20, 50] as [number, number],
+      humidityRange: [0, 100] as [number, number],
       weatherCondition: "",
-    });
-    setPendingFilters({
-      search: "",
-      tempRange: [-20, 50],
-      humidityRange: [0, 100],
-      weatherCondition: "",
-    });
+    };
+    setFilters(cleared);
+    setPendingFilters(cleared);
     setPage(1);
     setSearchTerm("");
+    setHasSearched(false); // don't auto-fetch after clearing
   };
 
   const applyFilters = () => {
-    setFilters(pendingFilters);
+    // choose search to apply (prefer pendingFilters.search, otherwise the input searchTerm)
+    const pendingSearch = (pendingFilters.search ?? "").trim();
+    const typedSearch = searchTerm.trim();
+    const searchToApply = pendingSearch !== "" ? pendingSearch : typedSearch;
+
+    if (!searchToApply) {
+      // defensive UI: should be disabled already, but guard anyway
+      // Replace alert with your toast if you have one
+      alert("Please enter a search term before applying filters.");
+      return;
+    }
+
+    // merge search into pendingFilters and apply
+    const newFilters = {
+      ...pendingFilters,
+      search: searchToApply,
+    };
+    setPendingFilters(newFilters);
+    setFilters(newFilters);
     setPage(1);
     setHasSearched(true);
   };
+
+  // compute disabled state for Apply button (requires a search either in pending filters or typed)
+  const applyDisabled = !(
+    (pendingFilters.search && pendingFilters.search.trim() !== "") ||
+    searchTerm.trim() !== ""
+  );
 
   return (
     <div className="w-full max-w-2xl space-y-6">
@@ -166,11 +188,11 @@ export function WeatherPropertyFilter() {
                   />
                   <div className="flex justify-between text-xs text-muted-foreground mt-2">
                     <span className="font-medium">
-                      {filters.tempRange[0]}°C
+                      {pendingFilters.tempRange[0]}°C
                     </span>
                     <span className="text-xs">-20°C to 50°C</span>
                     <span className="font-medium">
-                      {filters.tempRange[1]}°C
+                      {pendingFilters.tempRange[1]}°C
                     </span>
                   </div>
                 </div>
@@ -230,7 +252,11 @@ export function WeatherPropertyFilter() {
                 </div>
               </div>
 
-              <Button onClick={applyFilters} className="w-full">
+              <Button
+                onClick={applyFilters}
+                className="w-full"
+                disabled={applyDisabled}
+              >
                 Apply Filters
               </Button>
             </div>
